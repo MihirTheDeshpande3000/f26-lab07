@@ -103,7 +103,6 @@ Observer: I would bring it back if one publication had to independently fan out 
 
 Read `pricing/`. Not coded, one sentence.
 
-**The pattern.** Which one fits `PriceCalculator`, and the problem that makes
-it fit. Name the problem.
+**The pattern.** Strategy fits PriceCalculator because pricing could vary independently: if new pricing policies keep arriving, each policy can implement a common PricingPolicy interface instead of requiring edits to the existing pricing logic.
 
-**Would you apply it today?** Yes or no, one line, with the reason.
+**Would you apply it today?** No, currently the pricing algorithm is fixed, adding it now would just create indirection.
