@@ -13,20 +13,16 @@ Keep it short and specific. Point at methods, call sites, and test names.
 
 ### The pin (write this section before you direct the refactor)
 
-**The pin.** File and test name, plus one sentence naming the method and the
-observable result it pins. Not "recurring bookings work". Green against the
-shipped code, and you did not edit or delete an existing test method to get
-there.
+**The pin.** In `BookingWorkflowTest.java`,
+`recurringCancelCancelsTheSelectedOccurrenceAndAllLaterOccurrences` pins
+`BookingWorkflow.cancel`: cancelling the second occurrence of a recurring
+series leaves the first occurrence active, cancels the second and every later
+occurrence, and publishes one cancellation notification for each occurrence
+it cancels.
 
-**Why that one, and does a shipped test already cover it?** Of everything
-`BookingWorkflow` does, why is this the behavior worth a test? If something
-shipped comes close, say what your pin adds. If nothing does, say how you
-checked.
+**Why that one, and does a shipped test already cover it?** This behavior is worth pinning because `cancel` acts on more bookings than the booking ID passed by its caller, so a refactor could easily change the boundary of the cancellation or notify only once. Out of all the tests in `BookingWorkflowTest`, the shipped test `recurringCancelReleasesTheOccurrence` comes closest, but it cancels the last occurrence; therefore, it does not show that cancelling from the middle preserves earlier occurrences while cancelling and notifying for all later ones.
 
-**What a regeneration would do differently here.** Suppose someone
-threw this class away and regenerated it from a one-line description of what a
-booking workflow does. Name the decision that would be made a second time, and
-say which way it would probably go.
+**What a regeneration would do differently here.** A regeneration from only a one-line description of a booking workflow would have to decide again whether cancelling one recurring occurrence affects only that occurrence or the rest of the series. It would probably cancel only the booking whose ID was passed, because the method is named `cancel` and receives a single `bookingId`; the current "this and all future occurrences" policy is not visible in that interface or in a one-line specification.
 
 ### The directive
 
