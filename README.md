@@ -49,3 +49,5 @@ From this directory. `SETUP.md` says what green looks like.
 - CI: `.github/workflows/ci.yml`, same command as above
 
 See the Lab 7 handout on the course page for the three milestones you show a TA.
+
+ChatGPT Codex 5.1 Sol Light
