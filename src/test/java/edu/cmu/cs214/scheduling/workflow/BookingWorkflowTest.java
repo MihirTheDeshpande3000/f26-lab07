@@ -154,6 +154,20 @@ class BookingWorkflowTest {
     }
 
     @Test
+    void recurringCancelCancelsTheSelectedOccurrenceAndAllLaterOccurrences() {
+        List<Booking> series = workflow.submit(
+                BookingRequest.recurring("C-200", "m-1", MON_9AM, MON_10AM, 4, 6)).getBooked();
+
+        assertTrue(workflow.cancel(series.get(1).getId(), false));
+
+        assertFalse(series.get(0).isCancelled());
+        assertTrue(series.get(1).isCancelled());
+        assertTrue(series.get(2).isCancelled());
+        assertTrue(series.get(3).isCancelled());
+        assertEquals(7, hub.getOutbox().size());
+    }
+
+    @Test
     void blockedCancelNeedsTheAdminFlag() {
         long id = workflow.submit(BookingRequest.blocked("W-101", MON_9AM, MON_11AM))
                 .getBooking().getId();
