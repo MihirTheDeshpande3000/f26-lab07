@@ -26,34 +26,23 @@ it cancels.
 
 ### The directive
 
-**The refactor and the exact directive.** Name the refactor (one from the menu
-in the handout) and paste the directive you gave the agent, including the scope
-you set, meaning which files and packages were in bounds, which were not, and
-one line on why the boundary sits where it does.
+**The refactor and the exact directive.**Replace the conditional with polymorphism. Alright, now via a replace conditional with polymorphism refactor, create a bookingtypehandler interface for each kind of booking handler to use. You should only need to use BookingWorkflow.java to use this. Everything else is unnecessary, as that is where everything that needs to be changed is housed. Everything the agent needs to change is in that file, so there isn't any reason any other files should be edited.
 
 ### The result
 
-**The diff and the suite.** How you are showing the diff to the TA (a commit,
-`git diff`, a branch), and the totals line (the shipped count plus your pin,
-all green).
+**The diff and the suite.** git diff d367f48.
 
-**What did NOT change: behavior and files.** The observable behavior you
-checked is still the same, including anything that surprised you while reading.
-Which files outside the scope are untouched, and how you verified that rather
-than assumed it. If the agent reached outside the directive, say where and what
-you did about it.
+[INFO] Tests run: 36, Failures: 0, Errors: 0, Skipped: 0
 
-**One thing the agent changed that you had to look at twice.** Something you
-checked line by line before accepting. If there was nothing, say how carefully
-you read the diff.
+**What did NOT change: behavior and files.** The methods and constructor of booking workflow are the same, with all the validation, descriptions, prices, notification messages, etc. are all the same. I was able to verify that fiels outside the scope are untouched via codex's own differences printout upon the addition and also via git diff.
+
+**One thing the agent changed that you had to look at twice.** There was nothing major I had to reread. I looked through the new git diff and it seemed pretty clear that the agent kept its changes within the scope of what I wanted it to do by using an interface instead of switch cases.
 
 ### The closing explanation
 
-**Refactor or regenerate?** Argue whether regenerating `BookingWorkflow` from scratch
-would have been the better call, using the lecture's four questions (test
-coverage, code age, spec quality, and reach). Be concrete about this codebase.
+**Refactor or regenerate?** Nah, I do not think it would've been a better call. Sure the code age was very young, but it still had detailed behavior that regeneration could've removed. The sepc is spread across implementation details and tests and the reach is also broad since all booking writes and notifications pass through the workflow. Thus a controlled refactor was better than recreating everything from an incomplete description.
 
-**What would flip your answer.** A condition about the artifact, not a feeling.
+**What would flip your answer.** If the workflow had a complete and authoratitve spec and fully comprehensive tests for all behavior and the implementation was nice and isolated (not requiring changing a bunch of stuff like callers, data, notif behaviors, etc.), then I would choose regeneration.
 
 ---
 
