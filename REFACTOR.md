@@ -52,38 +52,50 @@ Read `notify/`. It works and the outbox tests pass.
 
 ### The patterns present
 
-List every design pattern you can name in that package. For each one, the class
-or classes that carry it.
+Strategy: NotificationStrategy is the strategy interface and EmailNotificationStrategy is its concrete implementation. NotificationHub stores a NotificationStrategy and calls strategy.render(message) in publish.
 
+Factory: NotifierFactory.createStrategy() constructs the notification strategy used by NotificationHub.
+
+Observer: NotificationHub is the publisher/subject, NotificationSubscriber is the observer interface, and OutboxSubscriber is a concrete observer. NotificationHub.publish loops through its subscribers and calls onNotification.
+s
 ### The problem each one solves
+Strategy: It is useful when the program must choose among multiple interchangeable ways of rendering a notification, such as email, SMS, or another format.
 
-For each pattern you listed, what would have to be true about the requirements
-for that pattern to be the right call? One sentence each, not in terms of
-"flexibility".
+Factory: It is useful when deciding which notification implementation to construct is nontrivial or depends on configuration or runtime information that callers should not have to know.
+
+Observer: It is useful when one notification must be sent to multiple independently changing consumers without the publisher being coupled to each consumer.
 
 ### Which of those problems exist here
 
-For each pattern, does the problem it solves exist in this codebase? Point at
-the code that settles it.
+Strategy: No. There is only one NotificationStrategy implementation, EmailNotificationStrategy. More importantly, NotifierFactory.createStrategy() always returns new EmailNotificationStrategy(), so there is no actual choice of rendering algorithm. NotificationHub also does not receive a strategy from its caller; its constructor always obtains this same one from the factory.
+
+Factory: No. NotifierFactory.createStrategy() contains no creation decision; it is only:
+
+return new EmailNotificationStrategy();
+
+Constructing the renderer directly would currently express exactly the same requirement.
+
+Observer: No, not with the current requirements. NotificationHub maintains a list and exposes subscribe, but its constructor always installs exactly one OutboxSubscriber. There are no production calls elsewhere in the repository that subscribe another consumer. The shipped test hubDeliversToItsOneSubscriber even expects the count to be exactly one. The actual required behavior is that a published notification reaches the outbox, not that an arbitrary set of observers receive it.
 
 ### The simpler structure
 
-**Your proposal.** What replaces `notify/`. Sketch the classes and the one
-method that matters.
+**Your proposal.** Keep NotificationMessage, Outbox, and a much smaller NotificationHub. Remove NotificationStrategy, EmailNotificationStrategy, NotifierFactory, NotificationSubscriber, and OutboxSubscriber.
 
-**What stays the same.** The tested behavior it must still produce, named
-precisely enough that a reader can check it against the shipped tests.
+The important method would effectively be: a publish method that just appends a string in the required format.
 
-**What you would keep, if anything.** If you would keep one interface, say
-which and why. "None of it" is a fine answer if you can defend it.
+NotificationHub would simply own its Outbox, render the one required format, and append the result.
+
+**What stays the same.** The simplified version must still preserve the behavior tested by publishedMessageLandsInTheOutboxFullyRendered: one call to publish produces exactly one outbox message formatted as To: ... | Subject: ... | .... It must also preserve aConfirmationFromTheWorkflowReachesTheOutbox and the workflow tests that rely on the number of notifications produced, such as regularSubmitStoresAndNotifies, recurringSubmitBooksEveryWeekOfAnOpenSeries, regularCancelReleasesTheSlotAndNotifies, and recurringCancelCancelsTheSelectedOccurrenceAndAllLaterOccurrences.
+
+**What you would keep, if anything.** I would not keep either notification interface today. NotificationMessage is still useful as a data object and Outbox is still useful because the rest of the code and tests inspect sent messages, but there is currently only one renderer and one destination.
 
 ### What would bring each layer back
 
-For at least two of the layers you would remove, what requirement, if it
-arrived next sprint, would make that layer the right structure? Be specific
-about the requirement, not about the pattern.
+Strategy: I would bring it back if the next sprint required the same notification to support genuinely different selectable rendering/delivery formats, for example email and SMS, with the choice depending on the member's notification preference.
 
-**Misuse or anti-pattern?** Say which this is and why the distinction matters.
+Observer: I would bring it back if one publication had to independently fan out to several consumers, for example writing to the outbox, updating an audit log, and sending a live notification, with those consumers able to be added or removed without changing NotificationHub.publish.
+
+**Misuse or anti-pattern?** I would call this pattern misuse rather than an anti-pattern. Strategy, Observer, Factory, and Singleton are legitimate structures when their corresponding problems exist. Here, most of those problems do not exist yet, so the patterns add indirection without buying needed behavior. Calling the patterns themselves anti-patterns would incorrectly imply that those structures are inherently bad rather than simply unjustified in this codebase.
 
 ---
 
